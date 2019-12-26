@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 import torch
 import torch.nn as nn
-from PIL import Image
+from config import Config
 from torchvision import models, transforms
 
 # Load the pre-trained model from pytorch
@@ -15,29 +15,27 @@ features.extend([nn.Linear(num_features, 6)])  # Add our layer with 6 outputs
 
 vgg16.classifier = nn.Sequential(*features)  # Replace the model classifier
 print("Loading pretrained model..")
-vgg16.load_state_dict(torch.load('/Users/a112233/Downloads/VGG16_v2-OCT_Retina_CSR_MH.pt', map_location=torch.device('cpu')))
+vgg16.load_state_dict(torch.load(Config.CLASSIFIER_LOCATION, map_location=torch.device('cpu')))
 print("Loaded!")
 vgg16.eval()
 
 
-def transform_image(image_path):
+def transform_image(pred_image):
     my_transforms = transforms.Compose([
         transforms.Resize(256),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
-    image = Image.open(image_path).convert('RGB')
+    image = pred_image.convert('RGB')
     return my_transforms(image).unsqueeze(0)
 
 
-def get_prediction(image_path):
-    tensor = transform_image(image_path=image_path)
+def get_prediction(pred_image):
+    tensor = transform_image(pred_image=pred_image)
     outputs = vgg16(tensor)
     _, y_hat = outputs.max(1)
     predicted_idx = y_hat.item()
     return class_index[predicted_idx]
 
 
-class_name = get_prediction(image_path='/Users/a112233/Downloads/kermany2018/DEC2019-half-dataset/test/CSR/CSR97.jpeg')
-print(class_name)

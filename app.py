@@ -1,14 +1,15 @@
 #!flask/bin/python
 import base64
+import io
 
+from PIL import Image
 from flask import Flask, jsonify, request
-from cassandra.cluster import Cluster
-from datetime import datetime
-import uuid
+
+from predictions import get_prediction
+from service.cassandra_service import CassandraService
 
 app = Flask(__name__)
-cluster = Cluster(['127.0.0.1'])
-session = cluster.connect('test')
+cassandra_service = CassandraService()
 
 
 @app.route('/', methods=['GET'])
@@ -19,8 +20,7 @@ def index():
 @app.route('/predictions', methods=['GET'])
 def get_predictions():
     predictions = []
-    rows = session.execute(
-        'SELECT prediction_timestamp, record_id, image_name, image, predicted_disease FROM predictions')
+    rows = cassandra_service.get_predictions()
     for prediction_row in rows:
         prediction = {
             'prediction_timestamp': prediction_row.prediction_timestamp,
@@ -35,20 +35,20 @@ def get_predictions():
 
 @app.route('/predictions', methods=['POST'])
 def save_prediction():
-    insert_prediction_stmt = session.prepare("""INSERT INTO predictions (prediction_timestamp, record_id, image,
-     image_name, predicted_disease) VALUES (?, ?, ?, ?, ?)""")
-
     image = request.args.get('image', '')
     image_name = request.args.get('image_name', '')
     predicted_disease = request.args.get('predicted_disease', '')
-    prediction_timestamp = datetime.now()
-    record_id = uuid.uuid4()
-
-    statement = session.execute(insert_prediction_stmt,
-                                [prediction_timestamp, record_id, image, image_name, predicted_disease])
-    print(statement)
+    cassandra_service.insert_prediction(image=image, image_name=image_name, predicted_disease=predicted_disease)
     return request
 
 
+@app.route('/predict', methods=['POST'])
+def predict():
+    image = request.files["image"]
+    image_bytes = Image.open(io.BytesIO(image.read()))
+    class_name = get_prediction(pred_image=image_bytes)
+    return jsonify(prediction=class_name)
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, ssl_context=('ssl/cert.pem', 'ssl/key.pem'))
