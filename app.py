@@ -47,8 +47,13 @@ def predict():
     image = request.files["image"]
     image_bytes = Image.open(io.BytesIO(image.read()))
     class_name = get_prediction(pred_image=image_bytes)
-    return jsonify(prediction=class_name)
+    prediction = {
+        'image_name': image.filename,
+        'predicted_disease': class_name,
+    }
+    predictions = [prediction]
+    return jsonify(predictions)
 
 
 if __name__ == '__main__':
-    app.run(debug=True, ssl_context=('ssl/cert.pem', 'ssl/key.pem'))
+    app.run(debug=True, ssl_context=('ssl/dev.retina.classifier.crt', 'ssl/dev.retina.classifier.key'))
