@@ -2,7 +2,7 @@ from __future__ import print_function, division
 
 import torch
 import torch.nn as nn
-from config import Config
+from .config import Config
 from torchvision import models, transforms
 
 # Load the pre-trained model from pytorch

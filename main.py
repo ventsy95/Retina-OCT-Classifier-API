@@ -1,26 +1,30 @@
-#!flask/bin/python
+# main.py
+
+from flask import Blueprint
 import base64
 import io
 
 from PIL import Image
-from flask import Flask, jsonify, request
+from flask import jsonify, request
+from flask_login import login_required, current_user
 
-from predictions import get_prediction
-from service.cassandra_service import CassandraService
+from .predictions import get_prediction
+from .service.cassandra_service import CassandraService
 
-app = Flask(__name__)
+main = Blueprint('main', __name__)
 cassandra_service = CassandraService()
 
 
-@app.route('/', methods=['GET'])
+@main.route('/', methods=['GET'])
 def index():
     return "Hello, World!"
 
 
-@app.route('/predictions', methods=['GET'])
+@main.route('/predictions', methods=['GET'])
+@login_required
 def get_predictions():
     predictions = []
-    rows = cassandra_service.get_predictions()
+    rows = cassandra_service.get_predictions(current_user.email)
     for prediction_row in rows:
         prediction = {
             'prediction_timestamp': prediction_row.prediction_timestamp,
@@ -33,16 +37,19 @@ def get_predictions():
     return jsonify(predictions)
 
 
-@app.route('/predictions', methods=['POST'])
+@main.route('/predictions', methods=['POST'])
+@login_required
 def save_prediction():
     image = request.args.get('image', '')
     image_name = request.args.get('image_name', '')
     predicted_disease = request.args.get('predicted_disease', '')
-    cassandra_service.insert_prediction(image=image, image_name=image_name, predicted_disease=predicted_disease)
+    cassandra_service.insert_prediction(image=image, image_name=image_name, predicted_disease=predicted_disease,
+                                        organization=current_user.email)
     return request
 
 
-@app.route('/predict', methods=['POST'])
+@main.route('/predict', methods=['POST'])
+@login_required
 def predict():
     image = request.files["image"]
     image_bytes = Image.open(io.BytesIO(image.read()))
@@ -54,6 +61,3 @@ def predict():
     predictions = [prediction]
     return jsonify(predictions)
 
-
-if __name__ == '__main__':
-    app.run(debug=True, ssl_context=('ssl/dev.retina.classifier.crt', 'ssl/dev.retina.classifier.key'))

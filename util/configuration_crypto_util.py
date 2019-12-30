@@ -2,7 +2,7 @@ import io
 
 from cryptography.fernet import Fernet
 from configparser import ConfigParser
-from config import Config
+from ..config import Config
 
 file = open(Config.SECRET_KEY_LOCATION, 'rb')
 key = file.read()
