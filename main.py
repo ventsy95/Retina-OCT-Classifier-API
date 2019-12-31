@@ -10,6 +10,7 @@ from flask_login import login_required, current_user
 
 from .predictions import get_prediction
 from .service.cassandra_service import CassandraService
+from flask_cors import cross_origin
 
 main = Blueprint('main', __name__)
 cassandra_service = CassandraService()
@@ -22,8 +23,10 @@ def index():
 
 @main.route('/predictions', methods=['GET'])
 @login_required
+@cross_origin(origin='dev.retina.classifier')
 def get_predictions():
     predictions = []
+
     rows = cassandra_service.get_predictions(current_user.email)
     for prediction_row in rows:
         prediction = {
@@ -39,6 +42,7 @@ def get_predictions():
 
 @main.route('/predictions', methods=['POST'])
 @login_required
+@cross_origin(origin='dev.retina.classifier')
 def save_prediction():
     image = request.args.get('image', '')
     image_name = request.args.get('image_name', '')
@@ -50,6 +54,7 @@ def save_prediction():
 
 @main.route('/predict', methods=['POST'])
 @login_required
+@cross_origin(origin='dev.retina.classifier')
 def predict():
     image = request.files["image"]
     image_bytes = Image.open(io.BytesIO(image.read()))

@@ -4,6 +4,8 @@ from datetime import timedelta
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
+
 
 # init SQLAlchemy so we can use it later in our models
 db = SQLAlchemy()
@@ -15,6 +17,8 @@ def create_app():
     app.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopO'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+    app.config['CORS_HEADERS'] = 'Content-Type, CookieX-Auth-Token, Origin, Accept, Authorization, access-control-allow-origin'
+    app.config['CORS_SUPPORTS_CREDENTIALS']=True
 
     db.init_app(app)
 
@@ -36,5 +40,7 @@ def create_app():
     # blueprint for non-auth parts of app
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
+
+    CORS(app, resources=r'/*', allow_headers='Content-Type, Cookie, Set-Cookie, CookieX-Auth-Token, Origin, Accept, Authorization, access-control-allow-origin')
 
     return app

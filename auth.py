@@ -5,19 +5,23 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from .models import User
 from flask_login import login_user, login_required, logout_user
 from . import db
+from flask_cors import cross_origin
 
 auth = Blueprint('auth', __name__)
 
 
 @auth.route('/login')
+@cross_origin(origin='dev.retina.classifier')
 def login():
     return Response('Access denied. Login required.', 403)
 
 
 @auth.route('/login', methods=['POST'])
+@cross_origin(origin='dev.retina.classifier')
 def login_post():
     email = request.form.get('email')
     password = request.form.get('password')
+
     remember = True if request.form.get('remember') else False
 
     user = User.query.filter_by(email=email).first()
@@ -35,6 +39,7 @@ def login_post():
 
 
 @auth.route('/signup', methods=['POST'])
+@cross_origin(origin='dev.retina.classifier')
 def signup_post():
     email = request.form.get('email')
     name = request.form.get('fullName')
@@ -59,6 +64,7 @@ def signup_post():
 
 @auth.route('/logout')
 @login_required
+@cross_origin(origin='dev.retina.classifier')
 def logout():
     logout_user()
     return Response('Logged out successfully.', 200)
