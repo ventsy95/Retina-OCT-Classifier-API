@@ -1,11 +1,10 @@
 # main.py
 
-from flask import Blueprint
+from flask import Blueprint, Response, jsonify, request
 import base64
 import io
 
 from PIL import Image
-from flask import jsonify, request
 from flask_login import login_required, current_user
 
 from .predictions import get_prediction
@@ -17,6 +16,7 @@ cassandra_service = CassandraService()
 
 
 @main.route('/', methods=['GET'])
+@login_required
 def index():
     return "Hello, World!"
 
@@ -44,12 +44,13 @@ def get_predictions():
 @login_required
 @cross_origin(origin='dev.retina.classifier')
 def save_prediction():
-    image = request.args.get('image', '')
-    image_name = request.args.get('image_name', '')
-    predicted_disease = request.args.get('predicted_disease', '')
-    cassandra_service.insert_prediction(image=image, image_name=image_name, predicted_disease=predicted_disease,
+    image = request.files["image"]
+    image_bytes = image.read()
+    image_name = request.form.get('image_name', '')
+    predicted_disease = request.form.get('predicted_disease', '')
+    cassandra_service.insert_prediction(image=image_bytes, image_name=image_name, predicted_disease=predicted_disease,
                                         organization=current_user.email)
-    return request
+    return Response('Successfully saved.', 200)
 
 
 @main.route('/predict', methods=['POST'])

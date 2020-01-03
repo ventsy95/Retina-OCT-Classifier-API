@@ -1,7 +1,7 @@
 # __init__.py
 from datetime import timedelta
 
-from flask import Flask
+from flask import Flask, Response
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -25,6 +25,11 @@ def create_app():
     login_manager = LoginManager()
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
+
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        # do stuff
+        return Response("Unauthorized", 302)
 
     from .models import User
 

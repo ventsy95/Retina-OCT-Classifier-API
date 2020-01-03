@@ -23,6 +23,7 @@ class CassandraService:
         get_predictions_stmt = self.session.prepare(
             'SELECT prediction_timestamp, record_id, image_name, image, predicted_disease FROM ' + Config.PREDICTIONS_TABLE +
             ' WHERE organization=? ALLOW FILTERING')
+        print(organization)
         rows = self.session.execute(get_predictions_stmt, [organization, ])
         return rows
 
