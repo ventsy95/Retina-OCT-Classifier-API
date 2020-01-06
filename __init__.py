@@ -18,7 +18,8 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
     app.config['CORS_HEADERS'] = 'Content-Type, CookieX-Auth-Token, Origin, Accept, Authorization, access-control-allow-origin'
-    app.config['CORS_SUPPORTS_CREDENTIALS']=True
+    app.config['CORS_SUPPORTS_CREDENTIALS'] = True
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
 

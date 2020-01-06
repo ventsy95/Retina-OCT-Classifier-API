@@ -32,6 +32,9 @@ def get_predictions():
         prediction = {
             'prediction_timestamp': prediction_row.prediction_timestamp,
             'record_id': prediction_row.record_id,
+            'race': prediction_row.race,
+            'age': prediction_row.age,
+            'gender': prediction_row.gender,
             'image_name': prediction_row.image_name,
             'predicted_disease': prediction_row.predicted_disease,
             'image': base64.b64encode(prediction_row.image).decode('utf-8')
@@ -48,8 +51,11 @@ def save_prediction():
     image_bytes = image.read()
     image_name = request.form.get('image_name', '')
     predicted_disease = request.form.get('predicted_disease', '')
+    race = request.form.get('race', '')
+    age = int(request.form.get('age', ''))
+    gender = request.form.get('gender', '')
     cassandra_service.insert_prediction(image=image_bytes, image_name=image_name, predicted_disease=predicted_disease,
-                                        organization=current_user.email)
+                                        organization=current_user.email, race=race, age=age, gender=gender)
     return Response('Successfully saved.', 200)
 
 

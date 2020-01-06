@@ -21,19 +21,21 @@ class CassandraService:
 
     def get_predictions(self, organization):
         get_predictions_stmt = self.session.prepare(
-            'SELECT prediction_timestamp, record_id, image_name, image, predicted_disease FROM ' + Config.PREDICTIONS_TABLE +
+            'SELECT prediction_timestamp, record_id, image_name, image, predicted_disease, race, age, gender FROM '
+            + Config.PREDICTIONS_TABLE +
             ' WHERE organization=? ALLOW FILTERING')
         print(organization)
         rows = self.session.execute(get_predictions_stmt, [organization, ])
         return rows
 
-    def insert_prediction(self, image, image_name, predicted_disease, organization):
+    def insert_prediction(self, image, image_name, predicted_disease, organization, race, age, gender):
         prediction_timestamp = datetime.now()
         record_id = uuid.uuid4()
 
         insert_prediction_stmt = self.session.prepare('INSERT INTO ' + Config.PREDICTIONS_TABLE +
                                                       '(prediction_timestamp, record_id, image, image_name, '
-                                                      'predicted_disease, organization) VALUES (?, ?, ?, ?, ?, ?)')
+                                                      'predicted_disease, organization, race, age, gender)'
+                                                      ' VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
 
         self.session.execute(insert_prediction_stmt, [prediction_timestamp, record_id, image, image_name,
-                                                      predicted_disease, organization])
+                                                      predicted_disease, organization, race, age, gender])
