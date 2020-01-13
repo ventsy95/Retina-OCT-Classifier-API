@@ -34,6 +34,10 @@ def transform_image(pred_image):
 def get_prediction(pred_image):
     tensor = transform_image(pred_image=pred_image)
     outputs = vgg16(tensor)
+    m = nn.Softmax()
+    for element in m(outputs).data[0]:
+        print("%.2f%%" % (100 * element))
+    print(outputs.data)
     _, y_hat = outputs.max(1)
     predicted_idx = y_hat.item()
     return class_index[predicted_idx]

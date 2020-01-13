@@ -3,6 +3,7 @@
 from flask import Blueprint, Response, jsonify, request
 import base64
 import io
+import pydicom
 
 from PIL import Image
 from flask_login import login_required, current_user
@@ -64,7 +65,16 @@ def save_prediction():
 @cross_origin(origin='dev.retina.classifier')
 def predict():
     image = request.files["image"]
-    image_bytes = Image.open(io.BytesIO(image.read()))
+    if image.content_type == "application/dicom":
+        img = pydicom.read_file(image)
+        output = img.pixel_array.reshape((img.Rows, img.Columns))
+        dicom_image = Image.fromarray(output)
+        img_byte_arr = io.BytesIO()
+        dicom_image.save(img_byte_arr, format="PNG")
+        image_bytes = Image.open(io.BytesIO(img_byte_arr.getvalue()))
+    else:
+        image_bytes = Image.open(io.BytesIO(image.read()))
+
     class_name = get_prediction(pred_image=image_bytes)
     prediction = {
         'image_name': image.filename,
