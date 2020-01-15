@@ -15,7 +15,7 @@ def create_app():
     app = Flask(__name__)
 
     app.config['SECRET_KEY'] = '9OLWxND4o83j4K4iuopO'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite+pysqlcipher://:{}@/db.sqlite'.format(app.config['SECRET_KEY'])
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
     app.config['CORS_HEADERS'] = 'Content-Type, CookieX-Auth-Token, Origin, Accept, Authorization, access-control-allow-origin'
     app.config['CORS_SUPPORTS_CREDENTIALS'] = True
@@ -48,5 +48,10 @@ def create_app():
     app.register_blueprint(main_blueprint)
 
     CORS(app, resources=r'/*', allow_headers='Content-Type, Cookie, Set-Cookie, CookieX-Auth-Token, Origin, Accept, Authorization, access-control-allow-origin')
+
+    with app.app_context():
+
+        # Create tables for our models
+        db.create_all()
 
     return app

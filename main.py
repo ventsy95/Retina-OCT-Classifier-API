@@ -3,7 +3,6 @@
 from flask import Blueprint, Response, jsonify, request
 import base64
 import io
-import pydicom
 
 from PIL import Image
 from flask_login import login_required, current_user
@@ -11,6 +10,7 @@ from flask_login import login_required, current_user
 from .predictions import get_prediction
 from .service.cassandra_service import CassandraService
 from flask_cors import cross_origin
+import uuid
 
 main = Blueprint('main', __name__)
 cassandra_service = CassandraService()
@@ -60,20 +60,27 @@ def save_prediction():
     return Response('Successfully saved.', 200)
 
 
+@main.route('/delete-prediction', methods=['POST'])
+@login_required
+@cross_origin(origin='dev.retina.classifier')
+def delete_prediction():
+    predicted_disease = request.form.get('predicted_disease', '')
+    record_id = uuid.UUID(request.form.get('record_id', ''))
+    age = int(request.form.get('age', ''))
+    race = request.form.get('race', '')
+    gender = request.form.get('gender', '')
+
+    cassandra_service.delete_prediction(predicted_disease=predicted_disease, record_id=record_id, age=age, race=race,
+                                        gender=gender, organization=current_user.email)
+    return Response('Successfully deleted.', 200)
+
+
 @main.route('/predict', methods=['POST'])
 @login_required
 @cross_origin(origin='dev.retina.classifier')
 def predict():
     image = request.files["image"]
-    if image.content_type == "application/dicom":
-        img = pydicom.read_file(image)
-        output = img.pixel_array.reshape((img.Rows, img.Columns))
-        dicom_image = Image.fromarray(output)
-        img_byte_arr = io.BytesIO()
-        dicom_image.save(img_byte_arr, format="PNG")
-        image_bytes = Image.open(io.BytesIO(img_byte_arr.getvalue()))
-    else:
-        image_bytes = Image.open(io.BytesIO(image.read()))
+    image_bytes = Image.open(io.BytesIO(image.read()))
 
     class_name = get_prediction(pred_image=image_bytes)
     prediction = {

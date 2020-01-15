@@ -39,3 +39,11 @@ class CassandraService:
 
         self.session.execute(insert_prediction_stmt, [prediction_timestamp, record_id, image, image_name,
                                                       predicted_disease, organization, race, age, gender])
+
+    def delete_prediction(self, predicted_disease, organization, record_id, age, race, gender):
+
+        delete_prediction_stmt = self.session.prepare('DELETE FROM ' + Config.PREDICTIONS_TABLE +
+                                                      ' WHERE predicted_disease=? and organization=? and age=? and '
+                                                      'race=? and gender=? and record_id=?')
+
+        self.session.execute(delete_prediction_stmt, [predicted_disease, organization, age, race, gender, record_id])
