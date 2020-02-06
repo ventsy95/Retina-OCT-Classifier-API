@@ -20,6 +20,8 @@ def create_app():
     app.config['CORS_HEADERS'] = 'Content-Type, CookieX-Auth-Token, Origin, Accept, Authorization, access-control-allow-origin'
     app.config['CORS_SUPPORTS_CREDENTIALS'] = True
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = True
 
     db.init_app(app)
 
